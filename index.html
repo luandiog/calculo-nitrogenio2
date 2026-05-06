@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Aplicativo para calcular o volume necessário de nitrogênio em tubulações">
+    <meta name="theme-color" content="#0a7ea4">
+    <title>Cálculo Nitrogênio</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/json,{
+        \"name\":\"Cálculo Nitrogênio\",
+        \"short_name\":\"Calc. N₂\",
+        \"description\":\"Aplicativo para calcular o volume necessário de nitrogênio em tubulações\",
+        \"start_url\":\"/\",
+        \"display\":\"standalone\",
+        \"background_color\":\"#ffffff\",
+        \"theme_color\":\"#0a7ea4\",
+        \"orientation\":\"portrait-primary\"
+    }">
+    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230a7ea4' width='192' height='192'/><text x='50%' y='50%' font-size='120' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central'>N₂</text></svg>">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #0a7ea4;
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #0a7ea4;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: #687076;
+            font-size: 14px;
+        }
+
+        .form-section {
+            background: #f5f5f5;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-section h2 {
+            color: #11181c;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            color: #0a7ea4;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .input-label {
+            display: block;
+            color: #11181c;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-wrapper input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+            color: #11181c;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: #0a7ea4;
+            box-shadow: 0 0 0 3px rgba(10, 126, 164, 0.1);
+        }
+
+        .input-wrapper input::placeholder {
+            color: #9ba1a6;
+        }
+
+        .input-unit {
+            background: #0a7ea4;
+            color: white;
+            padding: 12px 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .btn-clear {
+            background: #f0f0f0;
+            color: #11181c;
+            border: 1.5px solid #e5e7eb;
+        }
+
+        .btn-clear:hover {
+            background: #e5e5e5;
+            transform: translateY(-2px);
+        }
+
+        .btn-clear:active {
+            transform: translateY(0);
+            background: #d9d9d9;
+        }
+
+        .btn-calculate {
+            background: #0a7ea4;
+            color: white;
+        }
+
+        .btn-calculate:hover {
+            background: #086a8a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(10, 126, 164, 0.3);
+        }
+
+        .btn-calculate:active {
+            transform: translateY(0);
+        }
+
+        .result-section {
+            background: linear-gradient(135deg, #0a7ea4 0%, #086a8a 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: white;
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .result-label {
+            font-size: 12px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .result-value {
+            font-size: 42px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            word-break: break-word;
+        }
+
+        .result-unit {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+
+        .result-details {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .result-details p {
+            margin-bottom: 5px;
+        }
+
+        .result-details p:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-box {
+            background: #f0f9ff;
+            border-left: 4px solid #0a7ea4;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .info-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            color: #0a7ea4;
+        }
+
+        .info-text {
+            color: #11181c;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .error-message {
+            background: #fee;
+            border-left: 4px solid #ef4444;
+            border-radius: 8px;
+            padding: 12px 15px;
+            color: #c0392b;
+            font-size: 14px;
+            display: none;
+            margin-bottom: 15px;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .footer {
+            text-align: center;
+            color: #9ba1a6;
+            font-size: 12px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+                border-radius: 15px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .result-value {
+                font-size: 32px;
+            }
+
+            button {
+                padding: 12px 16px;
+                font-size: 15px;
+            }
+        }
+
+        /* Modo escuro */
+        @media (prefers-color-scheme: dark) {
+            html, body {
+                background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            }
+
+            .container {
+                background: #1e1e1e;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            }
+
+            .form-section {
+                background: #2a2a2a;
+            }
+
+            .input-wrapper input {
+                background: #333;
+                color: #ecedee;
+                border-color: #444;
+            }
+
+            .input-wrapper input::placeholder {
+                color: #666;
+            }
+
+            .btn-clear {
+                background: #333;
+                color: #ecedee;
+                border-color: #444;
+            }
+
+            .btn-clear:hover {
+                background: #444;
+            }
+
+            .input-label, .info-text {
+                color: #ecedee;
+            }
+
+            .header p {
+                color: #9ba1a6;
+            }
+
+            .info-box {
+                background: rgba(10, 126, 164, 0.1);
+            }
+
+            .footer {
+                color: #666;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Cálculo de Nitrogênio</h1>
+            <p>Volume em tubulações</p>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="form-section">
+            <h2>Dados da Tubulação</h2>
+            
+            <div class="input-group">
+                <label class="input-label">Diâmetro da tubulação</label>
+                <div class="input-wrapper">
+                    <input 
+                        type="number" 
+                        id="diameter" 
+                        placeholder="Ex: 150" 
+                        min="1"
+                        max="999"
+                        step="0.1"
+                    >
+                    <div class="input-unit">mm</div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">Extensão da tubulação</label>
+                <div class="input-wrapper">
+                    <input 
+                        type="number" 
+                        id="extension" 
+                        placeholder="Ex: 250" 
+                        min="1"
+                        max="9999"
+                        step="0.1"
+                    >
+                    <div class="input-unit">m</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-clear" onclick="clearForm()">Limpar</button>
+            <button class="btn-calculate" onclick="calculateVolume()">Calcular</button>
+        </div>
+
+        <div class="result-section" id="resultSection">
+            <div class="result-label">Volume de Nitrogênio Necessário</div>
+            <div class="result-value" id="resultValue">0 m³</div>
+            <div class="result-unit">metros cúbicos</div>
+            <div class="result-details" id="resultDetails"></div>
+        </div>
+
+        <div class="info-box">
+            <div class="info-icon">ℹ</div>
+            <div class="info-text">
+                <strong>Conversão:</strong> A cada 20 bar na garrafa corresponde a 1 m³ de volume
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Cálculo Nitrogênio v1.0 • Desenvolvido com ❤️</p>
+        </div>
+    </div>
+
+    <script>
+        // Função para arredondar para o múltiplo de 100 superior
+        function roundUpTo100(value) {
+            return Math.ceil(value / 100) * 100;
+        }
+
+        // Função para obter o multiplicador baseado no diâmetro
+        function getMultiplier(diameter) {
+            if (diameter <= 100) {
+                return 1.3;
+            } else if (diameter <= 150) {
+                return 3;
+            } else if (diameter <= 200) {
+                return 5;
+            } else if (diameter <= 250) {
+                return 8;
+            } else {
+                return 12;
+            }
+        }
+
+        // Função para obter a faixa de diâmetro
+        function getDiameterRange(diameter) {
+            if (diameter <= 100) {
+                return "até 100 mm";
+            } else if (diameter <= 150) {
+                return "101 a 150 mm";
+            } else if (diameter <= 200) {
+                return "151 a 200 mm";
+            } else if (diameter <= 250) {
+                return "201 a 250 mm";
+            } else {
+                return "acima de 251 mm";
+            }
+        }
+
+        // Função para calcular o volume
+        function calculateVolume() {
+            const errorMessage = document.getElementById('errorMessage');
+            const resultSection = document.getElementById('resultSection');
+            const resultValue = document.getElementById('resultValue');
+            const resultDetails = document.getElementById('resultDetails');
+
+            // Limpar mensagem de erro
+            errorMessage.classList.remove('show');
+            errorMessage.textContent = '';
+
+            // Obter valores dos inputs
+            const diameterInput = document.getElementById('diameter').value.trim();
+            const extensionInput = document.getElementById('extension').value.trim();
+
+            // Validar inputs
+            if (!diameterInput || !extensionInput) {
+                showError('Por favor, preencha todos os campos');
+                resultSection.classList.remove('show');
+                return;
+            }
+
+            const diameter = parseFloat(diameterInput);
+            const extension = parseFloat(extensionInput);
+
+            // Validar valores numéricos
+            if (isNaN(diameter) || isNaN(extension) || diameter <= 0 || extension <= 0) {
+                showError('Por favor, insira valores numéricos válidos e maiores que zero');
+                resultSection.classList.remove('show');
+                return;
+            }
+
+            // Validar limites
+            if (diameter > 999) {
+                showError('Diâmetro deve ser menor que 1000 mm');
+                resultSection.classList.remove('show');
+                return;
+            }
+
+            if (extension > 9999) {
+                showError('Extensão deve ser menor que 10000 m');
+                resultSection.classList.remove('show');
+                return;
+            }
+
+            // Passo 1: Arredondar extensão para múltiplo de 100 superior
+            const roundedExtension = roundUpTo100(extension);
+
+            // Passo 2: Calcular unidades (extensão arredondada / 100)
+            const units = roundedExtension / 100;
+
+            // Passo 3: Obter multiplicador baseado no diâmetro
+            const multiplier = getMultiplier(diameter);
+
+            // Passo 4: Calcular volume final
+            const volume = units * multiplier;
+
+            // Obter faixa de diâmetro
+            const diameterRange = getDiameterRange(diameter);
+
+            // Exibir resultado
+            resultValue.textContent = volume.toFixed(2) + ' m³';
+
+            resultDetails.innerHTML = `
+                <p><strong>Extensão original:</strong> ${extension.toFixed(2)} m</p>
+                <p><strong>Extensão arredondada:</strong> ${roundedExtension} m</p>
+                <p><strong>Unidades (÷100):</strong> ${units}</p>
+                <p><strong>Diâmetro:</strong> ${diameter.toFixed(2)} mm (${diameterRange})</p>
+                <p><strong>Fator multiplicador:</strong> ${multiplier}</p>
+                <p><strong>Cálculo:</strong> ${units} × ${multiplier} = ${volume.toFixed(2)} m³</p>
+            `;
+
+            resultSection.classList.add('show');
+        }
+
+        // Função para exibir erro
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+        }
+
+        // Função para limpar o formulário
+        function clearForm() {
+            document.getElementById('diameter').value = '';
+            document.getElementById('extension').value = '';
+            document.getElementById('resultSection').classList.remove('show');
+            document.getElementById('errorMessage').classList.remove('show');
+            document.getElementById('diameter').focus();
+        }
+
+        // Permitir calcular com Enter
+        document.getElementById('diameter').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('extension').focus();
+            }
+        });
+
+        document.getElementById('extension').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                calculateVolume();
+            }
+        });
+
+        // Registrar Service Worker para PWA (offline)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('data:application/javascript,' + encodeURIComponent(`
+                self.addEventListener('install', event => {
+                    self.skipWaiting();
+                });
+                
+                self.addEventListener('activate', event => {
+                    self.clients.claim();
+                });
+                
+                self.addEventListener('fetch', event => {
+                    event.respondWith(
+                        fetch(event.request).catch(() => {
+                            return new Response('Offline', { status: 503 });
+                        })
+                    );
+                });
+            `)).catch(() => {
+                // Service Worker registration failed, app still works
+            });
+        }
+
+        // Focar no primeiro input ao carregar
+        window.addEventListener('load', function() {
+            document.getElementById('diameter').focus();
+        });
+    </script>
+</body>
+</html>
