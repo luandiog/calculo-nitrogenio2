@@ -413,7 +413,7 @@
                         max="999"
                         step="0.1"
                     >
-                    <div class="input-unit">mm</div>
+                    <div class="input-unit">(mm)</div>
                 </div>
             </div>
 
@@ -428,7 +428,7 @@
                         max="9999"
                         step="0.1"
                     >
-                    <div class="input-unit">m</div>
+                    <div class="input-unit">(m)</div>
                 </div>
             </div>
         </div>
@@ -537,6 +537,16 @@
                 resultSection.classList.remove('show');
                 return;
             }
+
+            // NOVA REGRA: diâmetro <= 63 mm E extensão <= 200 m → não precisa de nitrogênio
+            if (diameter <= 63 && extension <= 200) {
+                resultValue.textContent = 'Não é necessário nitrogênio';
+                resultDetails.innerHTML = '';
+                document.querySelector('.result-unit').style.display = 'none';
+                resultSection.classList.add('show');
+                return; // interrompe o cálculo
+            }
+            document.querySelector('.result-unit').style.display = '';
 
             // Passo 1: Arredondar extensão para múltiplo de 100 superior
             const roundedExtension = roundUpTo100(extension);
